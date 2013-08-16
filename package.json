@@ -1,0 +1,17 @@
+{
+  "name": "jp2a-lite",
+  "version": "0.0.1",
+  "description": "jp2a library for Node.js (lite)",
+  "keywords": ["jp2a"],
+  "repository": "https://github.com/zyxar/node-jp2a-lite.git",
+  "author": {
+    "name": "Markus Chou",
+    "email": "<chou.marcus@gmail.com>"
+  },
+  "dependencies": {},
+  "scripts": {
+    "preinstall": "cd jp2a-1.0.6 && ./configure && cd ../ && node-gyp configure && node-gyp build",
+    "preuninstall": "rm -rf build/*"
+  },
+  "main": "build/Release/jp2a.node"
+}
