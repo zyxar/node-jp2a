@@ -1,9 +1,9 @@
 {
-  "name": "jp2a-lite",
+  "name": "jp2a",
   "version": "0.0.1",
-  "description": "jp2a library for Node.js (lite)",
+  "description": "jp2a library for Node.js",
   "keywords": ["jp2a"],
-  "repository": "https://github.com/zyxar/node-jp2a-lite.git",
+  "repository": "https://github.com/zyxar/node-jp2a.git",
   "author": {
     "name": "Markus Chou",
     "email": "<chou.marcus@gmail.com>"
