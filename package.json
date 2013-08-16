@@ -10,7 +10,7 @@
   },
   "dependencies": {},
   "scripts": {
-    "preinstall": "cd jp2a-1.0.6 && ./configure && cd ../ && node-gyp configure && node-gyp build",
+    "preinstall": "if [ ! -f jp2a-1.0.6/config.h ];then (cd jp2a-1.0.6 && ./configure && cd ../ );fi; node-gyp rebuild",
     "preuninstall": "rm -rf build/*"
   },
   "main": "build/Release/jp2a.node"
