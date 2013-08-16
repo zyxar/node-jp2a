@@ -9,6 +9,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // curl.c
 #ifdef FEAT_CURL
 int is_url(const char* s);
@@ -25,9 +29,15 @@ void print_html_newline(FILE *fout);
 
 // image.c
 void decompress(FILE *fin, FILE *fout);
+void decompress_mem(void* buffer, long nbytes, FILE* fout);
 
 // options.c
 void parse_options(int argc, char** argv);
+void init_options();
 
 // term.c
 int get_termsize(int* width_, int* height_, char** error);
+
+#ifdef __cplusplus
+}
+#endif

@@ -496,3 +496,68 @@ void decompress(FILE *fp, FILE *fout) {
 	jpeg_finish_decompress(&jpg);
 	jpeg_destroy_decompress(&jpg);
 }
+
+void decompress_mem(void* jbuffer, long nbytes, FILE *fout) {
+    int row_stride;
+    struct jpeg_error_mgr jerr;
+    struct jpeg_decompress_struct jpg;
+    JSAMPARRAY buffer;
+    Image image;
+
+    jpg.err = jpeg_std_error(&jerr);
+    jpeg_create_decompress(&jpg);
+    jpeg_mem_src(&jpg, jbuffer, nbytes);
+    jpeg_read_header(&jpg, TRUE);
+    jpeg_start_decompress(&jpg);
+
+    if ( jpg.data_precision != 8 ) {
+        fprintf(stderr,
+            "Image has %d bits color channels, we only support 8-bit.\n",
+            jpg.data_precision);
+        exit(1);
+    }
+
+    row_stride = jpg.output_width * jpg.output_components;
+
+    buffer = (*jpg.mem->alloc_sarray)((j_common_ptr) &jpg, JPOOL_IMAGE, row_stride, 1);
+
+    aspect_ratio(jpg.output_width, jpg.output_height);
+
+    malloc_image(&image);
+    clear(&image);
+
+    if ( verbose ) print_info(&jpg);
+
+    init_image(&image, &jpg);
+
+    while ( jpg.output_scanline < jpg.output_height ) {
+        jpeg_read_scanlines(&jpg, buffer, 1);
+        process_scanline(&jpg, buffer[0], &image);
+        if ( verbose ) print_progress(&jpg);
+    }
+
+    if ( verbose ) {
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
+
+    normalize(&image);
+
+    if ( clearscr ) {
+        fprintf(fout, "%c[2J", 27); // ansi code for clear
+        fprintf(fout, "%c[0;0H", 27); // move to upper left
+    }
+
+    if ( html && !html_rawoutput ) print_html_start(html_fontsize, fout);
+    if ( use_border ) print_border(image.width);
+
+    (!usecolors? print_image : print_image_colors) (&image, (int) strlen(ascii_palette) - 1, fout);
+
+    if ( use_border ) print_border(image.width);
+    if ( html && !html_rawoutput ) print_html_end(fout);
+
+    free_image(&image);
+
+    jpeg_finish_decompress(&jpg);
+    jpeg_destroy_decompress(&jpg);
+}

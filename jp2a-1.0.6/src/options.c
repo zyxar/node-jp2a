@@ -346,3 +346,52 @@ void parse_options(int argc, char** argv) {
 
 	precalc_rgb(redweight, greenweight, blueweight);
 }
+// default opts
+void init_options() {
+
+    int fit_to_use;
+    char* err = "";
+    if ( get_termsize(&term_width, &term_height, &err) <= 0 ) {
+        fputs(err, stderr);
+        fputc('\n', stderr);
+        exit(1);
+    }
+
+    // use the smallest of terminal width or height
+    // to guarantee that image fits in display.
+    if ( term_width <= term_height )
+        fit_to_use = TERM_FIT_WIDTH;
+    else
+        fit_to_use = TERM_FIT_HEIGHT;
+
+    switch ( fit_to_use ) {
+    case TERM_FIT_ZOOM:
+        auto_width = auto_height = 0;
+        width = term_width - use_border*2;
+        height = term_height - 1 - use_border*2;
+        break;
+
+    case TERM_FIT_WIDTH:
+        width = term_width - use_border*2;
+        height = 0;
+        auto_height += 1;
+        break;
+
+    case TERM_FIT_HEIGHT:
+        width = 0;
+        height = term_height - 1 - use_border*2;
+        auto_width += 1;
+        break;
+    }
+
+
+    // only --width specified, calc width
+    if ( auto_width==1 && auto_height == 1 )
+        auto_height = 0;
+
+    // --width and --height is the same as using --size
+    if ( auto_width==2 && auto_height==1 )
+        auto_width = auto_height = 0;
+
+    precalc_rgb(redweight, greenweight, blueweight);
+}
