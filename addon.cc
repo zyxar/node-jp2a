@@ -12,9 +12,10 @@ using v8::String;
 using v8::Value;
 
 void Decode(const FunctionCallbackInfo<Value> &arguments) {
-  Isolate *isolate = arguments.GetIsolate();
+  // Isolate *isolate = arguments.GetIsolate();
   if (arguments.Length() < 1)
     return;
+  // TODO: handle options
   String::Utf8Value filename(arguments[0]->ToString());
   std::ifstream is(*filename, std::ifstream::binary);
   if (is) {
@@ -34,8 +35,8 @@ void Decode(const FunctionCallbackInfo<Value> &arguments) {
   // arguments.GetReturnValue().Set();
 }
 
-void Init(Handle<Object> exports) {
-  NODE_SET_METHOD(exports, "decode", Decode);
+void Init(Handle<Object> exports, Handle<Object> module) {
+  NODE_SET_METHOD(module, "exports", Decode);
 }
 
 NODE_MODULE(jp2a, Init)
