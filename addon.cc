@@ -1,51 +1,41 @@
-#ifndef BUILDING_NODE_EXTENSION
-#define BUILDING_NODE_EXTENSION
-#endif
+#include "jp2a-1.0.6/include/jp2a.h"
 
-#include <node.h>
 #include <fstream>
-#include <string>
+#include <node.h>
 #include <stdio.h>
 
-#include "jp2a.h"
+using v8::FunctionCallbackInfo;
+using v8::Handle;
+using v8::Isolate;
+using v8::Object;
+using v8::String;
+using v8::Value;
 
-using namespace v8;
-
-Handle<Value> Do(const Arguments& args) {
-  v8::String::Utf8Value filename(args[0]->ToString());
-  std::ifstream is(std::string(*filename).c_str(), std::ifstream::binary);
-  char* buffer = NULL;
-  int length = 0;
+void Decode(const FunctionCallbackInfo<Value> &arguments) {
+  Isolate *isolate = arguments.GetIsolate();
+  if (arguments.Length() < 1)
+    return;
+  String::Utf8Value filename(arguments[0]->ToString());
+  std::ifstream is(*filename, std::ifstream::binary);
   if (is) {
     is.seekg(0, is.end);
-    length = is.tellg();
+    int length = is.tellg();
     is.seekg(0, is.beg);
-    buffer = new char[length];
+    char *buffer = new char[length];
     is.read(buffer, length);
     if (is) {
       init_options();
       decompress_mem(buffer, length, stderr);
     }
     is.close();
-    delete[] buffer;
+    if (buffer)
+      delete[] buffer;
   }
-  HandleScope scope;
-  return scope.Close(Undefined());
-}
-
-Handle<Value> CreateFunction(const Arguments& args) {
-  HandleScope scope;
-
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(Do);
-  Local<Function> fn = tpl->GetFunction();
-  fn->SetName(String::NewSymbol("Do"));
-
-  return scope.Close(fn);
+  // arguments.GetReturnValue().Set();
 }
 
 void Init(Handle<Object> exports) {
-  exports->Set(String::NewSymbol("decoder"),
-      FunctionTemplate::New(CreateFunction)->GetFunction());
+  NODE_SET_METHOD(exports, "decode", Decode);
 }
 
 NODE_MODULE(jp2a, Init)

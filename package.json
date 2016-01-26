@@ -1,17 +1,24 @@
 {
   "name": "jp2a",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "jp2a library for Node.js",
   "keywords": ["jp2a"],
-  "repository": "https://github.com/zyxar/node-jp2a.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zyxar/node-jp2a.git"
+  },
   "author": {
-    "name": "Markus Chou",
+    "name": "Markus Tzoe",
     "email": "<chou.marcus@gmail.com>"
   },
   "dependencies": {},
-  "scripts": {
-    "preinstall": "if [ ! -f jp2a-1.0.6/config.h ];then (cd jp2a-1.0.6 && ./configure && cd ../ );fi; node-gyp rebuild",
-    "preuninstall": "rm -rf build/*"
+  "engines": {
+    "node": ">=4.0.0"
   },
-  "main": "build/Release/jp2a.node"
+  "scripts": {
+    "preinstall": "if [ ! -f jp2a-1.0.6/config.h ];then (cd jp2a-1.0.6 && ./configure && cd ../ );fi",
+    "install": "node-gyp rebuild"
+  },
+  "main": "build/Release/jp2a.node",
+  "license": "GPL-2.0"
 }
