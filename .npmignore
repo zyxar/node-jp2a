@@ -13,3 +13,4 @@ Makefile
 *.sublime-project
 *.sublime-workspace
 *.coffee
+.z*
