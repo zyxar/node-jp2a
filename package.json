@@ -1,5 +1,5 @@
 {
-  "name": "jp2a",
+  "name": "node-jp2a",
   "version": "0.1.0",
   "description": "jp2a library for Node.js",
   "keywords": ["jp2a"],
