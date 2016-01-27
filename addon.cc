@@ -54,12 +54,12 @@ void Jp2a(const FunctionCallbackInfo<Value> &arguments) {
 void Init(Handle<Object> exports, Handle<Object> module) {
   Isolate *isolate = exports->GetIsolate();
   Local<Function> fn = FunctionTemplate::New(isolate, Jp2a)->GetFunction();
-  fn->SetName(String::NewFromUtf8(isolate, "jp2a"));
+  Local<String> jp2a = String::NewFromUtf8(isolate, "jp2a");
+  fn->SetName(jp2a);
   Local<Object> versions = Object::New(isolate);
   Local<String> version = String::NewFromUtf8(isolate, "0.1.0");
-  versions->Set(String::NewFromUtf8(isolate, "package"), version);
-  versions->Set(String::NewFromUtf8(isolate, "jp2a"),
-                String::NewFromUtf8(isolate, VERSION));
+  versions->Set(String::NewFromUtf8(isolate, "module"), version);
+  versions->Set(jp2a, String::NewFromUtf8(isolate, VERSION));
   fn->Set(String::NewFromUtf8(isolate, "versions"), versions);
   fn->Set(String::NewFromUtf8(isolate, "version"), version);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
