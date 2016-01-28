@@ -56,14 +56,8 @@ void Init(Handle<Object> exports, Handle<Object> module) {
   Local<Function> fn = FunctionTemplate::New(isolate, Jp2a)->GetFunction();
   Local<String> jp2a = String::NewFromUtf8(isolate, "jp2a");
   fn->SetName(jp2a);
-  Local<Object> versions = Object::New(isolate);
-  Local<String> version = String::NewFromUtf8(isolate, "0.1.0");
-  versions->ForceSet(String::NewFromUtf8(isolate, "module"), version,
-                     v8::ReadOnly);
-  versions->ForceSet(jp2a, String::NewFromUtf8(isolate, VERSION), v8::ReadOnly);
-  fn->ForceSet(String::NewFromUtf8(isolate, "versions"), versions,
-               v8::ReadOnly);
-  fn->ForceSet(String::NewFromUtf8(isolate, "version"), version, v8::ReadOnly);
+  fn->ForceSet(String::NewFromUtf8(isolate, "version"),
+               String::NewFromUtf8(isolate, VERSION), v8::ReadOnly);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
 }
 
