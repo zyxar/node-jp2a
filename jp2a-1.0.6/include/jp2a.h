@@ -29,7 +29,6 @@ void print_html_newline(FILE *fout);
 
 // image.c
 void decompress(FILE *fin, FILE *fout);
-void decompress_mem(void* buffer, long nbytes, FILE* fout);
 
 // options.c
 void parse_options(int argc, char** argv);
