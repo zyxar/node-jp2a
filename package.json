@@ -19,6 +19,6 @@
     "preinstall": "if [ ! -f jp2a-1.0.6/config.h ];then (cd jp2a-1.0.6 && ./configure && cd ../ );fi",
     "install": "node-gyp rebuild"
   },
-  "main": "build/Release/jp2a.node",
+  "main": "index.js",
   "license": "GPL-2.0"
 }
