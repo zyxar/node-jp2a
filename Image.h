@@ -9,6 +9,7 @@ public:
   ~Image();
   Image &operator>>(std::ostream &);
   inline std::string errorMessage() { return mMessage.str(); }
+  inline const struct jpeg_decompress_struct *jpg() { return &mJPG; }
 
 private:
   void normalize();
