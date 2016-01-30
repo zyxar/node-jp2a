@@ -79,6 +79,7 @@ private:
   // prototype
   static void Close(const FunctionCallbackInfo<Value> &);
   static void Info(const FunctionCallbackInfo<Value> &);
+  static void Decode(const FunctionCallbackInfo<Value> &);
 
   explicit ImageWrap() {}
   ~ImageWrap() {}
@@ -94,30 +95,54 @@ void ImageWrap::Init(Local<Object> exports) {
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
   NODE_SET_PROTOTYPE_METHOD(tpl, "info", Info);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "decode", Decode);
 
   constructor.Reset(isolate, tpl->GetFunction());
   exports->ForceSet(imageString, tpl->GetFunction(), v8::ReadOnly);
 }
 
+void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
+  Isolate *isolate = arguments.GetIsolate();
+  JP2A::Image *image = ObjectWrap::Unwrap<ImageWrap>(arguments.Holder())->i;
+  if (!image) {
+    isolate->ThrowException(Exception::ReferenceError(
+        String::NewFromUtf8(isolate, "Image is closed")));
+    return;
+  }
+  std::stringstream ss;
+  (*image) >> ss;
+  Local<String> ret = String::NewFromUtf8(isolate, ss.str().c_str());
+  if (arguments.Length() < 1) {
+    return arguments.GetReturnValue().Set(ret);
+  }
+  if (arguments[0]->IsFunction()) {
+    Local<Value> object[] = {ret};
+    Local<Function>::Cast(arguments[0])
+        ->Call(isolate->GetCurrentContext()->Global(), 1, object);
+  }
+  return arguments.GetReturnValue().Set(arguments.This());
+}
+
 void ImageWrap::Info(const FunctionCallbackInfo<Value> &arguments) {
   Isolate *isolate = arguments.GetIsolate();
   JP2A::Image *image = ObjectWrap::Unwrap<ImageWrap>(arguments.Holder())->i;
-  if (image) {
-    Local<Object> object = Object::New(isolate);
-    object->Set(String::NewFromUtf8(isolate, "source_width"),
-                Integer::New(isolate, image->jpg()->output_width));
-    object->Set(String::NewFromUtf8(isolate, "source_height"),
-                Integer::New(isolate, image->jpg()->output_height));
-    object->Set(String::NewFromUtf8(isolate, "output_components"),
-                Integer::New(isolate, image->jpg()->output_components));
-    object->Set(String::NewFromUtf8(isolate, "output_width"),
-                Integer::New(isolate, width));
-    object->Set(String::NewFromUtf8(isolate, "output_height"),
-                Integer::New(isolate, height));
-    return arguments.GetReturnValue().Set(object);
+  if (!image) {
+    isolate->ThrowException(Exception::ReferenceError(
+        String::NewFromUtf8(isolate, "Image is closed")));
+    return;
   }
-  isolate->ThrowException(Exception::ReferenceError(
-      String::NewFromUtf8(isolate, "ImageWrap is closed")));
+  Local<Object> object = Object::New(isolate);
+  object->Set(String::NewFromUtf8(isolate, "source_width"),
+              Integer::New(isolate, image->jpg()->output_width));
+  object->Set(String::NewFromUtf8(isolate, "source_height"),
+              Integer::New(isolate, image->jpg()->output_height));
+  object->Set(String::NewFromUtf8(isolate, "output_components"),
+              Integer::New(isolate, image->jpg()->output_components));
+  object->Set(String::NewFromUtf8(isolate, "output_width"),
+              Integer::New(isolate, width));
+  object->Set(String::NewFromUtf8(isolate, "output_height"),
+              Integer::New(isolate, height));
+  return arguments.GetReturnValue().Set(object);
 }
 
 void ImageWrap::Close(const FunctionCallbackInfo<Value> &arguments) {
