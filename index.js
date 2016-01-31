@@ -1,12 +1,11 @@
 /*global require,module*/
 (function () {
   'use strict';
-  var jp2a = require('./build/Release/jp2a');
-  var pack = require('./package');
+  const jp2a = require('./build/Release/jp2a');
   Object.defineProperty(jp2a, 'versions', {
     writeable: false,
     value: {
-      module: pack.version,
+      module: require('./package').version,
       jp2a: jp2a.version
     }
   });

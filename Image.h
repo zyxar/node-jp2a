@@ -14,10 +14,9 @@ public:
   inline void width(int w) { mWidth = w; }
   inline int height() const { return mHeight; }
   inline void height(int h) { mHeight = h; }
-  inline bool error() const { return !mReady; }
 
-  bool init(unsigned char *, int);
   bool init(FILE *);
+  bool init(const char *);
   bool alloc();
   void process();
 
@@ -28,6 +27,7 @@ private:
 private:
   struct jpeg_error_mgr mJerr;
   struct jpeg_decompress_struct mJPG;
+  FILE *mFp;
   int mWidth;
   int mHeight;
   float *mPixel; // luminosity

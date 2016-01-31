@@ -1,5 +1,6 @@
 #include "Image.h"
 #include "jp2a-1.0.6/include/options.h"
+#include <errno.h>
 
 namespace JP2A {
 #define ROUND(x) (int)(0.5f + x)
@@ -9,14 +10,19 @@ extern void aspect_ratio(const int, const int);
 }
 
 Image::Image()
-    : mJerr{}, mJPG{}, mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr},
-      mBlue{nullptr}, mYadds{nullptr}, mLookupResX{nullptr}, mReady{false},
-      mUsecolors{false}, mMessage{} {}
+    : mJerr{}, mJPG{}, mFp{nullptr}, mPixel{nullptr}, mRed{nullptr},
+      mGreen{nullptr}, mBlue{nullptr}, mYadds{nullptr}, mLookupResX{nullptr},
+      mReady{false}, mUsecolors{false}, mMessage{} {}
 
-bool Image::init(FILE *fp) {
+bool Image::init(const char *filename) {
+  mFp = fopen(filename, "r");
+  if (!mFp) {
+    mMessage << strerror(errno);
+    return false;
+  }
   mJPG.err = jpeg_std_error(&mJerr);
   jpeg_create_decompress(&mJPG);
-  jpeg_stdio_src(&mJPG, fp);
+  jpeg_stdio_src(&mJPG, mFp);
   jpeg_read_header(&mJPG, TRUE);
   jpeg_start_decompress(&mJPG);
   if (mJPG.data_precision != 8) {
@@ -27,10 +33,15 @@ bool Image::init(FILE *fp) {
   return true;
 }
 
-bool Image::init(unsigned char *buffer, int length) {
+bool Image::init(FILE *fp) {
+  if (fp == nullptr) {
+    mMessage << "Null file pointer.";
+    return false;
+  }
+  mFp = fp;
   mJPG.err = jpeg_std_error(&mJerr);
   jpeg_create_decompress(&mJPG);
-  jpeg_mem_src(&mJPG, buffer, length);
+  jpeg_stdio_src(&mJPG, mFp);
   jpeg_read_header(&mJPG, TRUE);
   jpeg_start_decompress(&mJPG);
   if (mJPG.data_precision != 8) {
@@ -87,10 +98,11 @@ void Image::process() {
   mReady = true;
 }
 
-#define TRY_FREE(ptr)                                                          \
+#define TRY_(func, ptr)                                                        \
   {                                                                            \
     if (ptr) {                                                                 \
-      free(ptr);                                                               \
+      func(ptr);                                                               \
+      ptr = nullptr;                                                           \
     }                                                                          \
   }
 
@@ -98,12 +110,13 @@ Image::~Image() {
   mReady = false;
   jpeg_finish_decompress(&mJPG);
   jpeg_destroy_decompress(&mJPG);
-  TRY_FREE(mPixel)
-  TRY_FREE(mRed)
-  TRY_FREE(mGreen)
-  TRY_FREE(mBlue)
-  TRY_FREE(mYadds)
-  TRY_FREE(mLookupResX)
+  TRY_(fclose, mFp);
+  TRY_(free, mPixel);
+  TRY_(free, mRed);
+  TRY_(free, mGreen);
+  TRY_(free, mBlue);
+  TRY_(free, mYadds);
+  TRY_(free, mLookupResX);
 }
 
 void Image::scanline(const JSAMPLE *sampleline) {

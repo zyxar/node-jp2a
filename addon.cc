@@ -23,29 +23,15 @@ using v8::Value;
 
 void processJPEG(Isolate *isolate, const char *filename,
                  std::stringstream &ss) {
-  std::ifstream is(filename, std::ifstream::binary);
-  if (!is) {
-    isolate->ThrowException(
-        Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments")));
-    return;
-  }
-  is.seekg(0, is.end);
-  int length = is.tellg();
-  is.seekg(0, is.beg);
-  char *buffer = new char[length];
-  is.read(buffer, length);
-  is.close();
   JP2A::Image image{};
-  if (!image.init(reinterpret_cast<unsigned char *>(buffer), length)) {
+  if (!image.init(filename)) {
     isolate->ThrowException(Exception::Error(
         String::NewFromUtf8(isolate, image.errorMessage().c_str())));
-    delete[] buffer;
     return;
   }
   if (!image.alloc()) {
     isolate->ThrowException(Exception::Error(
         String::NewFromUtf8(isolate, image.errorMessage().c_str())));
-    delete[] buffer;
     return;
   }
   image.process();
@@ -115,6 +101,12 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
         String::NewFromUtf8(isolate, "Image is closed")));
     return;
   }
+  if (!image->alloc()) {
+    isolate->ThrowException(Exception::Error(
+        String::NewFromUtf8(isolate, image->errorMessage().c_str())));
+    return;
+  }
+  image->process();
   std::stringstream ss;
   (*image) >> ss;
   Local<String> ret = String::NewFromUtf8(isolate, ss.str().c_str());
@@ -171,32 +163,12 @@ void ImageWrap::New(const FunctionCallbackInfo<Value> &arguments) {
       return;
     }
     String::Utf8Value filename(arguments[0]->ToString());
-    std::ifstream is(*filename, std::ifstream::binary);
-    if (!is) {
-      isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "Wrong arguments")));
-      return;
-    }
-    is.seekg(0, is.end);
-    int length = is.tellg();
-    is.seekg(0, is.beg);
-    char *buffer = new char[length];
-    is.read(buffer, length);
-    is.close();
     auto *i = new JP2A::Image{};
-    if (!i->init(reinterpret_cast<unsigned char *>(buffer), length)) {
+    if (!i->init(*filename)) {
       isolate->ThrowException(Exception::Error(
           String::NewFromUtf8(isolate, i->errorMessage().c_str())));
-      delete[] buffer;
       return;
     }
-    if (!i->alloc()) {
-      isolate->ThrowException(Exception::Error(
-          String::NewFromUtf8(isolate, i->errorMessage().c_str())));
-      delete[] buffer;
-      return;
-    }
-    i->process();
     ImageWrap *image = new ImageWrap();
     image->i = i;
     image->Wrap(arguments.This());
