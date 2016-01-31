@@ -139,9 +139,9 @@ void ImageWrap::Info(const FunctionCallbackInfo<Value> &arguments) {
   object->Set(String::NewFromUtf8(isolate, "output_components"),
               Integer::New(isolate, image->jpg()->output_components));
   object->Set(String::NewFromUtf8(isolate, "output_width"),
-              Integer::New(isolate, width));
+              Integer::New(isolate, image->width()));
   object->Set(String::NewFromUtf8(isolate, "output_height"),
-              Integer::New(isolate, height));
+              Integer::New(isolate, image->height()));
   return arguments.GetReturnValue().Set(object);
 }
 

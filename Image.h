@@ -8,8 +8,12 @@ public:
   explicit Image(unsigned char *, int);
   ~Image();
   Image &operator>>(std::ostream &);
-  inline std::string errorMessage() { return mMessage.str(); }
-  inline const struct jpeg_decompress_struct *jpg() { return &mJPG; }
+  inline std::string errorMessage() const { return mMessage.str(); }
+  inline const struct jpeg_decompress_struct *jpg() const { return &mJPG; }
+  inline int width() const { return mWidth; }
+  inline void width(int w) { mWidth = w; }
+  inline int height() const { return mHeight; }
+  inline void height(int h) { mHeight = h; }
 
 private:
   void normalize();

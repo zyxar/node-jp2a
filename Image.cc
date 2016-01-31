@@ -23,8 +23,8 @@ Image::Image(unsigned char *buffer, int length)
     return;
   }
   aspect_ratio(mJPG.output_width, mJPG.output_height);
-  mWidth = width;
-  mHeight = height;
+  mWidth = ::width;
+  mHeight = ::height;
   mYadds = (int *)malloc(mHeight * sizeof(int));
   mPixel = (float *)malloc(mWidth * mHeight * sizeof(float));
   mLookupResX = (int *)malloc((1 + mWidth) * sizeof(int));
