@@ -8,10 +8,26 @@ extern "C" {
 extern void aspect_ratio(const int, const int);
 }
 
-Image::Image(unsigned char *buffer, int length)
+Image::Image()
     : mJerr{}, mJPG{}, mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr},
       mBlue{nullptr}, mYadds{nullptr}, mLookupResX{nullptr}, mReady{false},
-      mUsecolors{false}, mMessage{} {
+      mUsecolors{false}, mMessage{} {}
+
+bool Image::init(FILE *fp) {
+  mJPG.err = jpeg_std_error(&mJerr);
+  jpeg_create_decompress(&mJPG);
+  jpeg_stdio_src(&mJPG, fp);
+  jpeg_read_header(&mJPG, TRUE);
+  jpeg_start_decompress(&mJPG);
+  if (mJPG.data_precision != 8) {
+    mMessage << "Image has " << mJPG.data_precision
+             << " bits color channels, we only support 8-bit.";
+    return false;
+  }
+  return true;
+}
+
+bool Image::init(unsigned char *buffer, int length) {
   mJPG.err = jpeg_std_error(&mJerr);
   jpeg_create_decompress(&mJPG);
   jpeg_mem_src(&mJPG, buffer, length);
@@ -20,8 +36,12 @@ Image::Image(unsigned char *buffer, int length)
   if (mJPG.data_precision != 8) {
     mMessage << "Image has " << mJPG.data_precision
              << " bits color channels, we only support 8-bit.";
-    return;
+    return false;
   }
+  return true;
+}
+
+bool Image::alloc() {
   aspect_ratio(mJPG.output_width, mJPG.output_height);
   mWidth = ::width;
   mHeight = ::height;
@@ -36,7 +56,7 @@ Image::Image(unsigned char *buffer, int length)
   if (!(mPixel && mYadds && mLookupResX) ||
       (mUsecolors && !(mRed && mGreen && mBlue))) {
     mMessage << "Not enough memory for given output dimension.";
-    return;
+    return false;
   }
   memset(mYadds, 0, mHeight * sizeof(int));
   memset(mPixel, 0, mWidth * mHeight * sizeof(float));
@@ -52,6 +72,10 @@ Image::Image(unsigned char *buffer, int length)
     mLookupResX[j] = ROUND((float)j * mResizeX);
     mLookupResX[j] *= mJPG.out_color_components;
   }
+  return true;
+}
+
+void Image::process() {
   int row_stride = mJPG.output_width * mJPG.output_components;
   JSAMPARRAY jbuffer = (*mJPG.mem->alloc_sarray)(
       reinterpret_cast<j_common_ptr>(&mJPG), JPOOL_IMAGE, row_stride, 1);

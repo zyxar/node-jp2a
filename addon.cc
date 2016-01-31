@@ -35,14 +35,20 @@ void processJPEG(Isolate *isolate, const char *filename,
   char *buffer = new char[length];
   is.read(buffer, length);
   is.close();
-  JP2A::Image image(reinterpret_cast<unsigned char *>(buffer), length);
-  delete[] buffer;
-  std::string errorMessage = image.errorMessage();
-  if (errorMessage.length() > 0) {
-    isolate->ThrowException(
-        Exception::Error(String::NewFromUtf8(isolate, errorMessage.c_str())));
+  JP2A::Image image{};
+  if (!image.init(reinterpret_cast<unsigned char *>(buffer), length)) {
+    isolate->ThrowException(Exception::Error(
+        String::NewFromUtf8(isolate, image.errorMessage().c_str())));
+    delete[] buffer;
     return;
   }
+  if (!image.alloc()) {
+    isolate->ThrowException(Exception::Error(
+        String::NewFromUtf8(isolate, image.errorMessage().c_str())));
+    delete[] buffer;
+    return;
+  }
+  image.process();
   image >> ss;
 }
 
@@ -177,15 +183,20 @@ void ImageWrap::New(const FunctionCallbackInfo<Value> &arguments) {
     char *buffer = new char[length];
     is.read(buffer, length);
     is.close();
-    JP2A::Image *i =
-        new JP2A::Image(reinterpret_cast<unsigned char *>(buffer), length);
-    delete[] buffer;
-    std::string errorMessage = i->errorMessage();
-    if (errorMessage.length() > 0) {
-      isolate->ThrowException(
-          Exception::Error(String::NewFromUtf8(isolate, errorMessage.c_str())));
+    auto *i = new JP2A::Image{};
+    if (!i->init(reinterpret_cast<unsigned char *>(buffer), length)) {
+      isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, i->errorMessage().c_str())));
+      delete[] buffer;
       return;
     }
+    if (!i->alloc()) {
+      isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, i->errorMessage().c_str())));
+      delete[] buffer;
+      return;
+    }
+    i->process();
     ImageWrap *image = new ImageWrap();
     image->i = i;
     image->Wrap(arguments.This());

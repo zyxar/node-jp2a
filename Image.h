@@ -5,7 +5,7 @@ namespace JP2A {
 
 class Image {
 public:
-  explicit Image(unsigned char *, int);
+  explicit Image();
   ~Image();
   Image &operator>>(std::ostream &);
   inline std::string errorMessage() const { return mMessage.str(); }
@@ -14,6 +14,12 @@ public:
   inline void width(int w) { mWidth = w; }
   inline int height() const { return mHeight; }
   inline void height(int h) { mHeight = h; }
+  inline bool error() const { return !mReady; }
+
+  bool init(unsigned char *, int);
+  bool init(FILE *);
+  bool alloc();
+  void process();
 
 private:
   void normalize();
