@@ -95,28 +95,37 @@ void ImageWrap::Init(Local<Object> exports) {
 
 void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   Isolate *isolate = arguments.GetIsolate();
+  if (arguments.Length() < 1 || !arguments[0]->IsFunction()) {
+    return arguments.GetReturnValue().Set(arguments.This());
+  }
+
+  auto callback = Local<Function>::Cast(arguments[0]);
+  auto global = isolate->GetCurrentContext()->Global();
   JP2A::Image *image = ObjectWrap::Unwrap<ImageWrap>(arguments.Holder())->i;
   if (!image) {
-    isolate->ThrowException(Exception::ReferenceError(
-        String::NewFromUtf8(isolate, "Image is closed")));
-    return;
+    Local<Value> msg[] = {String::NewFromUtf8(isolate, "Image is closed")};
+    callback->Call(global, 1, msg);
+    return arguments.GetReturnValue().Set(arguments.This());
   }
-  if (!image->alloc()) {
-    isolate->ThrowException(Exception::Error(
-        String::NewFromUtf8(isolate, image->errorMessage().c_str())));
-    return;
-  }
-  image->process();
-  std::stringstream ss;
-  (*image) >> ss;
-  Local<String> ret = String::NewFromUtf8(isolate, ss.str().c_str());
-  if (arguments.Length() < 1) {
-    return arguments.GetReturnValue().Set(ret);
-  }
-  if (arguments[0]->IsFunction()) {
-    Local<Value> object[] = {ret};
-    Local<Function>::Cast(arguments[0])
-        ->Call(isolate->GetCurrentContext()->Global(), 1, object);
+
+  switch (image->next()) {
+  case JP2A::Image::INIT:
+  case JP2A::Image::ALLOC:
+    if (!image->alloc()) {
+      Local<Value> msg[] = {
+          String::NewFromUtf8(isolate, image->errorMessage().c_str())};
+      callback->Call(global, 1, msg);
+      return arguments.GetReturnValue().Set(arguments.This());
+    }
+  case JP2A::Image::PROCESS:
+    image->process();
+  case JP2A::Image::DONE:
+    std::stringstream ss;
+    (*image) >> ss;
+    Local<Value> ret[] = {v8::Null(isolate),
+                          String::NewFromUtf8(isolate, ss.str().c_str())};
+    callback->Call(global, 2, ret);
+    break;
   }
   return arguments.GetReturnValue().Set(arguments.This());
 }

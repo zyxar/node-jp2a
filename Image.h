@@ -5,6 +5,7 @@ namespace JP2A {
 
 class Image {
 public:
+  enum NEXT_STEP { INIT, ALLOC, PROCESS, DONE };
   explicit Image();
   ~Image();
   Image &operator>>(std::ostream &);
@@ -14,6 +15,7 @@ public:
   inline void width(int w) { mWidth = w; }
   inline int height() const { return mHeight; }
   inline void height(int h) { mHeight = h; }
+  inline NEXT_STEP next() { return mNext; }
 
   bool init(FILE *);
   bool init(const char *);
@@ -21,6 +23,7 @@ public:
   void process();
 
 private:
+  bool init();
   void normalize();
   void scanline(const JSAMPLE *);
 
@@ -28,6 +31,7 @@ private:
   struct jpeg_error_mgr mJerr;
   struct jpeg_decompress_struct mJPG;
   FILE *mFp;
+  NEXT_STEP mNext;
   int mWidth;
   int mHeight;
   float *mPixel; // luminosity
@@ -36,7 +40,6 @@ private:
   float mResizeY;
   float mResizeX;
   int *mLookupResX;
-  bool mReady;
   bool mUsecolors;
   std::stringstream mMessage;
 };

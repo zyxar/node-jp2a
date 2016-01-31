@@ -10,16 +10,11 @@ extern void aspect_ratio(const int, const int);
 }
 
 Image::Image()
-    : mJerr{}, mJPG{}, mFp{nullptr}, mPixel{nullptr}, mRed{nullptr},
-      mGreen{nullptr}, mBlue{nullptr}, mYadds{nullptr}, mLookupResX{nullptr},
-      mReady{false}, mUsecolors{false}, mMessage{} {}
+    : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mPixel{nullptr},
+      mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr}, mYadds{nullptr},
+      mLookupResX{nullptr}, mUsecolors{false}, mMessage{} {}
 
-bool Image::init(const char *filename) {
-  mFp = fopen(filename, "r");
-  if (!mFp) {
-    mMessage << strerror(errno);
-    return false;
-  }
+bool Image::init() {
   mJPG.err = jpeg_std_error(&mJerr);
   jpeg_create_decompress(&mJPG);
   jpeg_stdio_src(&mJPG, mFp);
@@ -30,7 +25,20 @@ bool Image::init(const char *filename) {
              << " bits color channels, we only support 8-bit.";
     return false;
   }
+  aspect_ratio(mJPG.output_width, mJPG.output_height);
+  mWidth = ::width;
+  mHeight = ::height;
+  mNext = ALLOC;
   return true;
+}
+
+bool Image::init(const char *filename) {
+  mFp = fopen(filename, "r");
+  if (!mFp) {
+    mMessage << strerror(errno);
+    return false;
+  }
+  return this->init();
 }
 
 bool Image::init(FILE *fp) {
@@ -39,23 +47,10 @@ bool Image::init(FILE *fp) {
     return false;
   }
   mFp = fp;
-  mJPG.err = jpeg_std_error(&mJerr);
-  jpeg_create_decompress(&mJPG);
-  jpeg_stdio_src(&mJPG, mFp);
-  jpeg_read_header(&mJPG, TRUE);
-  jpeg_start_decompress(&mJPG);
-  if (mJPG.data_precision != 8) {
-    mMessage << "Image has " << mJPG.data_precision
-             << " bits color channels, we only support 8-bit.";
-    return false;
-  }
-  return true;
+  return this->init();
 }
 
 bool Image::alloc() {
-  aspect_ratio(mJPG.output_width, mJPG.output_height);
-  mWidth = ::width;
-  mHeight = ::height;
   mYadds = (int *)malloc(mHeight * sizeof(int));
   mPixel = (float *)malloc(mWidth * mHeight * sizeof(float));
   mLookupResX = (int *)malloc((1 + mWidth) * sizeof(int));
@@ -83,6 +78,7 @@ bool Image::alloc() {
     mLookupResX[j] = ROUND((float)j * mResizeX);
     mLookupResX[j] *= mJPG.out_color_components;
   }
+  mNext = PROCESS;
   return true;
 }
 
@@ -95,7 +91,7 @@ void Image::process() {
     scanline(jbuffer[0]);
   }
   normalize();
-  mReady = true;
+  mNext = DONE;
 }
 
 #define TRY_(func, ptr)                                                        \
@@ -107,7 +103,6 @@ void Image::process() {
   }
 
 Image::~Image() {
-  mReady = false;
   jpeg_finish_decompress(&mJPG);
   jpeg_destroy_decompress(&mJPG);
   TRY_(fclose, mFp);
@@ -204,8 +199,6 @@ void Image::normalize() {
 }
 
 Image &Image::operator>>(std::ostream &os) {
-  if (!mReady)
-    return *this;
 #ifdef WIN32
   char *line = (char *)malloc(mWidth + 1);
 #else
