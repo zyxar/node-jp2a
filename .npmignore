@@ -1,11 +1,4 @@
 build/
-jp2a-1.0.6/Makefile
-jp2a-1.0.6/config.h
-jp2a-1.0.6/config.log
-jp2a-1.0.6/config.status
-jp2a-1.0.6/src/.deps/
-jp2a-1.0.6/src/Makefile
-jp2a-1.0.6/stamp-h1
 test/
 .travis.yml
 .npmignore

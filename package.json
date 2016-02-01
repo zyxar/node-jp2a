@@ -1,6 +1,6 @@
 {
   "name": "node-jp2a",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "jp2a library for Node.js",
   "keywords": ["jp2a"],
   "repository": {
@@ -16,9 +16,7 @@
     "node": ">=4.0.0"
   },
   "scripts": {
-    "preinstall": "if [ ! -f jp2a-1.0.6/config.h ];then (cd jp2a-1.0.6 && ./configure && cd ../ );fi",
-    "install": "node-gyp rebuild"
   },
-  "main": "index.js",
+  "main": "build/Release/jp2a.node",
   "license": "GPL-2.0"
 }
