@@ -48,7 +48,17 @@ private:
   float mResizeY;
   float mResizeX;
   int *mLookupResX;
-  bool mUsecolors;
   std::stringstream mMessage;
+
+private:
+  float mRED[256], mGREEN[256], mBLUE[256], mGRAY[256];
+  float mRedWeight;
+  float mGreenWeight;
+  float mBlueWeight;
+  int mUseBorder;
+  bool mUsecolors;
+  bool mInvert;
+  bool mFlipX;
+  bool mFlipY;
 };
 } // namespace JP2A

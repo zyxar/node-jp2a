@@ -1,16 +1,26 @@
 #include "Image.h"
 #include "jp2a-1.0.6/include/jp2a.h"
-#include "jp2a-1.0.6/include/options.h"
 #include <errno.h>
 #include <string.h>
 
 namespace JP2A {
 #define ROUND(x) (int)(0.5f + x)
+#define ASCII_PALETTE_SIZE 256
+char ascii_palette[ASCII_PALETTE_SIZE + 1] = "   ...',;:clodxkO0KXNWM";
 
 Image::Image()
     : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
       mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr},
-      mYadds{nullptr}, mLookupResX{nullptr}, mUsecolors{false}, mMessage{} {}
+      mYadds{nullptr}, mLookupResX{nullptr}, mMessage{}, mRedWeight{0.2989f},
+      mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mUseBorder{0},
+      mUsecolors{false}, mInvert{true}, mFlipX{false}, mFlipY{false} {
+  for (int n = 0; n < 256; ++n) {
+    mRED[n] = ((float)n) * mRedWeight / 255.0f;
+    mGREEN[n] = ((float)n) * mGreenWeight / 255.0f;
+    mBLUE[n] = ((float)n) * mBlueWeight / 255.0f;
+    mGRAY[n] = ((float)n) / 255.0f;
+  }
+}
 
 bool Image::init() {
   mJPG.err = jpeg_std_error(&mJerr);
@@ -137,9 +147,9 @@ void Image::scanline(const JSAMPLE *sampleline) {
       v = r = g = b = 0.0f;
       while (src <= src_end) {
         if (components != 3)
-          v += GRAY[src[0]];
+          v += mGRAY[src[0]];
         else {
-          v += RED[src[0]] + GREEN[src[1]] + BLUE[src[2]];
+          v += mRED[src[0]] + mGREEN[src[1]] + mBLUE[src[2]];
           if (readcolors) {
             r += (float)src[0] / 255.0f;
             g += (float)src[1] / 255.0f;
@@ -203,8 +213,8 @@ void Image::aspect_ratio() {
     }
   }
 
-  if ((mWidth + use_border * 2) > tWidth) {
-    mWidth = tWidth - use_border * 2;
+  if ((mWidth + mUseBorder * 2) > tWidth) {
+    mWidth = tWidth - mUseBorder * 2;
     mHeight = ROUND(0.5f * (float)mWidth * (float)mJPG.output_height /
                     (float)mJPG.output_width);
   }
@@ -245,10 +255,10 @@ Image &Image::operator>>(std::ostream &os) {
   line[mWidth] = 0;
   for (int y = 0; y < mHeight; ++y) {
     for (int x = 0; x < mWidth; ++x) {
-      const float lum = mPixel[x + (flipy ? mHeight - y - 1 : y) * mWidth];
+      const float lum = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
       const int pos = ROUND((float)chars * lum);
-      line[flipx ? mWidth - x - 1 : x] =
-          ascii_palette[invert ? pos : chars - pos];
+      line[mFlipX ? mWidth - x - 1 : x] =
+          ascii_palette[mInvert ? pos : chars - pos];
     }
     os << line << "\n";
   }

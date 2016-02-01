@@ -2,7 +2,7 @@
   'targets': [
     {
       'target_name': 'jp2a',
-      'sources': [ 'addon.cc', 'Image.cc', 'jp2a-1.0.6/src/html.c', 'jp2a-1.0.6/src/options.c', 'jp2a-1.0.6/src/term.c', 'jp2a-1.0.6/src/curl.c'],
+      'sources': [ 'addon.cc', 'Image.cc', 'jp2a-1.0.6/src/term.c'],
       'include_dirs': [ '/opt/include', 'jp2a-1.0.6/include', 'jp2a-1.0.6' ],
       'conditions': [
         [ 'OS=="mac"', {
@@ -16,14 +16,14 @@
               '-Wno-unused-private-field',
             ],
           },
-          'libraries': ['-ljpeg -lcurl -lncurses'],
+          'libraries': ['-ljpeg -lncurses'],
         }, { # OS!="mac"
           'cflags!':    ['-fno-exceptions'],
           'cflags':     ['-DHAVE_CONFIG_H', '-O3'],
           'cflags_cc':  ['-Wall', '-O3', '-std=c++11', '-fexceptions'],
           'cflags_cc!': ['-fno-exceptions'],
           'cflags_cc!': ['-fno-rtti'],
-          'libraries': ['-ljpeg -lcurl -lncurses'],
+          'libraries': ['-ljpeg -lncurses'],
         }],
       ]
     }

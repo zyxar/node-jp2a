@@ -1,6 +1,5 @@
 #include "jp2a-1.0.6/config.h"
 #include "jp2a-1.0.6/include/jp2a.h"
-#include "jp2a-1.0.6/include/options.h"
 
 #include "Image.h"
 #include <fstream>
@@ -195,10 +194,6 @@ void ImageWrap::New(const FunctionCallbackInfo<Value> &arguments) {
   }
 }
 
-extern "C" {
-extern void precalc_rgb(const float red, const float green, const float blue);
-}
-
 void Init(Handle<Object> exports, Handle<Object> module) {
   Isolate *isolate = exports->GetIsolate();
   Local<Function> fn = FunctionTemplate::New(isolate, Jp2a)->GetFunction();
@@ -208,7 +203,6 @@ void Init(Handle<Object> exports, Handle<Object> module) {
                String::NewFromUtf8(isolate, VERSION), v8::ReadOnly);
   ImageWrap::Init(fn);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
-  precalc_rgb(redweight, greenweight, blueweight); // jp2a
 }
 
 NODE_MODULE(jp2a, Init)
