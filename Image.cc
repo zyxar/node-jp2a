@@ -35,8 +35,8 @@ bool termsize(int *_width, int *_height) {
   if (i <= 0) {
     return false;
   }
-  *_width = tgetnum("co");
-  *_height = tgetnum("li");
+  *_width = tgetnum((char *)"co");
+  *_height = tgetnum((char *)"li");
   return true;
 #endif
 }
