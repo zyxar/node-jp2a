@@ -33,6 +33,7 @@ private:
   bool init();
   void normalize();
   void scanline(const JSAMPLE *);
+  void aspect_ratio();
 
 private:
   struct jpeg_error_mgr mJerr;

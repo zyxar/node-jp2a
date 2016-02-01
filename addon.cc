@@ -50,8 +50,7 @@ void Jp2a(const FunctionCallbackInfo<Value> &arguments) {
         Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments")));
     return;
   }
-  init_options(); // TODO: handle options
-
+  // TODO: handle options
   String::Utf8Value filename(arguments[0]->ToString());
   std::stringstream ss;
   processJPEG(isolate, *filename, ss);
@@ -196,6 +195,10 @@ void ImageWrap::New(const FunctionCallbackInfo<Value> &arguments) {
   }
 }
 
+extern "C" {
+extern void precalc_rgb(const float red, const float green, const float blue);
+}
+
 void Init(Handle<Object> exports, Handle<Object> module) {
   Isolate *isolate = exports->GetIsolate();
   Local<Function> fn = FunctionTemplate::New(isolate, Jp2a)->GetFunction();
@@ -205,6 +208,7 @@ void Init(Handle<Object> exports, Handle<Object> module) {
                String::NewFromUtf8(isolate, VERSION), v8::ReadOnly);
   ImageWrap::Init(fn);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
+  precalc_rgb(redweight, greenweight, blueweight); // jp2a
 }
 
 NODE_MODULE(jp2a, Init)

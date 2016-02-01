@@ -1,53 +1,11 @@
 #include "Image.h"
+#include "jp2a-1.0.6/include/jp2a.h"
 #include "jp2a-1.0.6/include/options.h"
 #include <errno.h>
 #include <string.h>
 
 namespace JP2A {
 #define ROUND(x) (int)(0.5f + x)
-
-extern "C" {
-// Calculate width or height, but not both
-void aspect_ratio(const int jpeg_width, const int jpeg_height) {
-// the 2.0f and 0.5f factors are used for text displays that (usually) have
-// characters that are taller than they are wide.
-
-#define CALC_WIDTH                                                             \
-  ROUND(2.0f * (float)height * (float)jpeg_width / (float)jpeg_height)
-#define CALC_HEIGHT                                                            \
-  ROUND(0.5f * (float)width * (float)jpeg_height / (float)jpeg_width)
-
-  // calc width
-  if (auto_width && !auto_height) {
-    width = CALC_WIDTH;
-
-    // adjust for too small dimensions
-    while (width == 0) {
-      ++height;
-      aspect_ratio(jpeg_width, jpeg_height);
-    }
-
-    while (termfit == TERM_FIT_AUTO && (width + use_border * 2) > term_width) {
-      width = term_width - use_border * 2;
-      height = 0;
-      auto_height = 1;
-      auto_width = 0;
-      aspect_ratio(jpeg_width, jpeg_height);
-    }
-  }
-
-  // calc height
-  if (!auto_width && auto_height) {
-    height = CALC_HEIGHT;
-
-    // adjust for too small dimensions
-    while (height == 0) {
-      ++width;
-      aspect_ratio(jpeg_width, jpeg_height);
-    }
-  }
-}
-}
 
 Image::Image()
     : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
@@ -65,11 +23,6 @@ bool Image::init() {
              << " bits color channels, we only support 8-bit.";
     return false;
   }
-  aspect_ratio(mJPG.output_width, mJPG.output_height);
-  if (mWidth == 0)
-    mWidth = ::width;
-  if (mHeight == 0)
-    mHeight = ::height;
   mNext = ALLOC;
   return true;
 }
@@ -93,6 +46,7 @@ bool Image::init(FILE *fp) {
 }
 
 bool Image::alloc() {
+  aspect_ratio();
   mYadds = (int *)malloc(mHeight * sizeof(int));
   mPixel = (float *)malloc(mWidth * mHeight * sizeof(float));
   mLookupResX = (int *)malloc((1 + mWidth) * sizeof(int));
@@ -213,6 +167,47 @@ void Image::scanline(const JSAMPLE *sampleline) {
   }
 
   lasty = y;
+}
+
+void Image::aspect_ratio() {
+  // the 2.0f and 0.5f factors are used for text displays that (usually) have
+  // characters that are taller than they are wide.
+  int tWidth = 0, tHeight = 0;
+  if (get_termsize(&tWidth, &tHeight, nullptr) <= 0) {
+    return; // TODO: throw exception
+  }
+
+  if (mWidth == 0) {
+    if (mHeight == 0) {
+      mWidth = tWidth;
+      mHeight = ROUND(0.5f * (float)mWidth * (float)mJPG.output_height /
+                      (float)mJPG.output_width);
+    } else {
+      mWidth = ROUND(2.0f * (float)mHeight * (float)mJPG.output_width /
+                     (float)mJPG.output_height);
+      while (mWidth == 0) {
+        ++mHeight;
+        mWidth = ROUND(2.0f * (float)mHeight * (float)mJPG.output_width /
+                       (float)mJPG.output_height);
+      }
+    }
+  } else {
+    if (mHeight == 0) {
+      mHeight = ROUND(0.5f * (float)mWidth * (float)mJPG.output_height /
+                      (float)mJPG.output_width);
+      while (mHeight == 0) {
+        ++mWidth;
+        mHeight = ROUND(0.5f * (float)mWidth * (float)mJPG.output_height /
+                        (float)mJPG.output_width);
+      }
+    }
+  }
+
+  if ((mWidth + use_border * 2) > tWidth) {
+    mWidth = tWidth - use_border * 2;
+    mHeight = ROUND(0.5f * (float)mWidth * (float)mJPG.output_height /
+                    (float)mJPG.output_width);
+  }
 }
 
 void Image::normalize() {
