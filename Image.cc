@@ -27,8 +27,10 @@ bool Image::init() {
     return false;
   }
   aspect_ratio(mJPG.output_width, mJPG.output_height);
-  mWidth = ::width;
-  mHeight = ::height;
+  if (mWidth == 0)
+    mWidth = ::width;
+  if (mHeight == 0)
+    mHeight = ::height;
   mNext = ALLOC;
   return true;
 }

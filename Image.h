@@ -14,12 +14,12 @@ public:
   inline const struct jpeg_decompress_struct *jpg() const { return &mJPG; }
   inline int width() const { return mWidth; }
   inline void width(int w) {
-    if (mNext == INIT || mNext == ALLOC)
+    if ((mNext == INIT || mNext == ALLOC) && w > 0)
       mWidth = w;
   }
   inline int height() const { return mHeight; }
   inline void height(int h) {
-    if (mNext == INIT || mNext == ALLOC)
+    if ((mNext == INIT || mNext == ALLOC) && h > 0)
       mHeight = h;
   }
   inline NEXT_STEP next() { return mNext; }

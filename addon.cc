@@ -112,6 +112,12 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   switch (image->next()) {
   case JP2A::Image::INIT:
   case JP2A::Image::ALLOC:
+    if (length > 1 && arguments[0]->IsNumber()) {
+      image->width(arguments[0]->NumberValue());
+    }
+    if (length > 2 && arguments[1]->IsNumber()) {
+      image->height(arguments[1]->NumberValue());
+    }
     if (!image->alloc()) {
       Local<Value> msg[] = {
           String::NewFromUtf8(isolate, image->errorMessage().c_str())};

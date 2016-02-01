@@ -7,7 +7,7 @@ console.log jp2a
 console.log jp2a.versions
 image = new jp2a.Image 'test/piccode_10221754_974.jpg'
 image.decode null
-image.decode (e, s) ->
+image.decode 100, 18, (e, s) ->
   if e then process.stderr.write e+'\n'
   else
     process.stdout.write s
