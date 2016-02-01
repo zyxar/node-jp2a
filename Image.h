@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include <jpeglib.h>
 #include <sstream>
 namespace JP2A {
@@ -12,9 +13,15 @@ public:
   inline std::string errorMessage() const { return mMessage.str(); }
   inline const struct jpeg_decompress_struct *jpg() const { return &mJPG; }
   inline int width() const { return mWidth; }
-  inline void width(int w) { mWidth = w; }
+  inline void width(int w) {
+    if (mNext == INIT || mNext == ALLOC)
+      mWidth = w;
+  }
   inline int height() const { return mHeight; }
-  inline void height(int h) { mHeight = h; }
+  inline void height(int h) {
+    if (mNext == INIT || mNext == ALLOC)
+      mHeight = h;
+  }
   inline NEXT_STEP next() { return mNext; }
 
   bool init(FILE *);

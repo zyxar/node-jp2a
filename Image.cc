@@ -11,9 +11,9 @@ extern void aspect_ratio(const int, const int);
 }
 
 Image::Image()
-    : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mPixel{nullptr},
-      mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr}, mYadds{nullptr},
-      mLookupResX{nullptr}, mUsecolors{false}, mMessage{} {}
+    : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
+      mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr},
+      mYadds{nullptr}, mLookupResX{nullptr}, mUsecolors{false}, mMessage{} {}
 
 bool Image::init() {
   mJPG.err = jpeg_std_error(&mJerr);

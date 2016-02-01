@@ -1,8 +1,8 @@
 #include "jp2a-1.0.6/config.h"
 #include "jp2a-1.0.6/include/jp2a.h"
 #include "jp2a-1.0.6/include/options.h"
-#include "Image.h"
 
+#include "Image.h"
 #include <fstream>
 #include <node.h>
 #include <node_object_wrap.h>
@@ -95,11 +95,12 @@ void ImageWrap::Init(Local<Object> exports) {
 
 void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   Isolate *isolate = arguments.GetIsolate();
-  if (arguments.Length() < 1 || !arguments[0]->IsFunction()) {
+  auto length = arguments.Length();
+  if (length < 1 || !arguments[length - 1]->IsFunction()) {
     return arguments.GetReturnValue().Set(arguments.This());
   }
 
-  auto callback = Local<Function>::Cast(arguments[0]);
+  auto callback = Local<Function>::Cast(arguments[length - 1]);
   auto global = isolate->GetCurrentContext()->Global();
   JP2A::Image *image = ObjectWrap::Unwrap<ImageWrap>(arguments.Holder())->i;
   if (!image) {
