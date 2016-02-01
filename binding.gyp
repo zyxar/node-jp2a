@@ -2,8 +2,8 @@
   'targets': [
     {
       'target_name': 'jp2a',
-      'sources': [ 'addon.cc', 'Image.cc', 'jp2a-1.0.6/src/term.c'],
-      'include_dirs': [ '/opt/include', 'jp2a-1.0.6/include', 'jp2a-1.0.6' ],
+      'sources': [ 'addon.cc', 'Image.cc' ],
+      'include_dirs': [],
       'conditions': [
         [ 'OS=="mac"', {
           'xcode_settings': {

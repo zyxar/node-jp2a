@@ -1,12 +1,45 @@
 #include "Image.h"
-#include "jp2a-1.0.6/include/jp2a.h"
 #include <errno.h>
 #include <string.h>
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <curses.h>
+#include <term.h>
+#endif
 
 namespace JP2A {
 #define ROUND(x) (int)(0.5f + x)
 #define ASCII_PALETTE_SIZE 256
 char ascii_palette[ASCII_PALETTE_SIZE + 1] = "   ...',;:clodxkO0KXNWM";
+
+bool termsize(int *_width, int *_height) {
+#ifdef WIN32
+  CONSOLE_SCREEN_BUFFER_INFO io;
+  if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &io)) {
+    return false;
+  }
+  *_width = io.srWindow.Right - io.srWindow.Left;
+  *_height = io.srWindow.Bottom - io.srWindow.Top;
+  return true;
+#else
+  char *termtype = getenv("TERM");
+  char term_buffer[2048];
+  if (!termtype) {
+    return false;
+  }
+
+  int i = tgetent(term_buffer, termtype);
+  if (i <= 0) {
+    return false;
+  }
+  *_width = tgetnum("co");
+  *_height = tgetnum("li");
+  return true;
+#endif
+}
 
 Image::Image()
     : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
@@ -183,7 +216,7 @@ void Image::aspect_ratio() {
   // the 2.0f and 0.5f factors are used for text displays that (usually) have
   // characters that are taller than they are wide.
   int tWidth = 0, tHeight = 0;
-  if (get_termsize(&tWidth, &tHeight, nullptr) <= 0) {
+  if (!termsize(&tWidth, &tHeight)) {
     return; // TODO: throw exception
   }
 

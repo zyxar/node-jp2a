@@ -1,6 +1,3 @@
-#include "jp2a-1.0.6/config.h"
-#include "jp2a-1.0.6/include/jp2a.h"
-
 #include "Image.h"
 #include <fstream>
 #include <node.h>
@@ -200,7 +197,7 @@ void Init(Handle<Object> exports, Handle<Object> module) {
   Local<String> jp2a = String::NewFromUtf8(isolate, "jp2a");
   fn->SetName(jp2a);
   fn->ForceSet(String::NewFromUtf8(isolate, "version"),
-               String::NewFromUtf8(isolate, VERSION), v8::ReadOnly);
+               String::NewFromUtf8(isolate, "0.3.0"), v8::ReadOnly);
   ImageWrap::Init(fn);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
 }
