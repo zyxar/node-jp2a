@@ -2,7 +2,7 @@
   'targets': [
     {
       'target_name': 'jp2a',
-      'sources': [ 'addon.cc', 'Image.cc', 'jp2a-1.0.6/src/html.c', 'jp2a-1.0.6/src/image.c', 'jp2a-1.0.6/src/options.c', 'jp2a-1.0.6/src/term.c', 'jp2a-1.0.6/src/curl.c'],
+      'sources': [ 'addon.cc', 'Image.cc', 'jp2a-1.0.6/src/html.c', 'jp2a-1.0.6/src/options.c', 'jp2a-1.0.6/src/term.c', 'jp2a-1.0.6/src/curl.c'],
       'include_dirs': [ '/opt/include', 'jp2a-1.0.6/include', 'jp2a-1.0.6' ],
       'conditions': [
         [ 'OS=="mac"', {
