@@ -1,6 +1,7 @@
 #include "Image.h"
 #include "jp2a-1.0.6/include/options.h"
 #include <errno.h>
+#include <string.h>
 
 namespace JP2A {
 #define ROUND(x) (int)(0.5f + x)
