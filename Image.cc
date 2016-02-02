@@ -14,6 +14,7 @@ namespace JP2A {
 #define ROUND(x) (int)(0.5f + x)
 #define ASCII_PALETTE_SIZE 256
 char ascii_palette[ASCII_PALETTE_SIZE + 1] = "   ...',;:clodxkO0KXNWM";
+static auto ascii_palette_length = strlen(ascii_palette) - 1;
 
 bool termsize(int *_width, int *_height) {
 #ifdef WIN32
@@ -31,8 +32,7 @@ bool termsize(int *_width, int *_height) {
     return false;
   }
 
-  int i = tgetent(term_buffer, termtype);
-  if (i <= 0) {
+  if (tgetent(term_buffer, termtype) <= 0) {
     return false;
   }
   *_width = tgetnum((char *)"co");
@@ -45,8 +45,8 @@ Image::Image()
     : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
       mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr},
       mYadds{nullptr}, mLookupResX{nullptr}, mMessage{}, mRedWeight{0.2989f},
-      mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mUsecolors{false},
-      mInvert{true}, mFlipX{false}, mFlipY{false} {
+      mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mColor{false}, mInvert{true},
+      mFlipX{false}, mFlipY{false} {
   for (int n = 0; n < 256; ++n) {
     mRED[n] = ((float)n) * mRedWeight / 255.0f;
     mGREEN[n] = ((float)n) * mGreenWeight / 255.0f;
@@ -93,20 +93,20 @@ bool Image::alloc() {
   mYadds = (int *)malloc(mHeight * sizeof(int));
   mPixel = (float *)malloc(mWidth * mHeight * sizeof(float));
   mLookupResX = (int *)malloc((1 + mWidth) * sizeof(int));
-  if (mUsecolors) {
+  if (mColor) {
     mRed = (float *)malloc(mWidth * mHeight * sizeof(float));
     mGreen = (float *)malloc(mWidth * mHeight * sizeof(float));
     mBlue = (float *)malloc(mWidth * mHeight * sizeof(float));
   }
   if (!(mPixel && mYadds && mLookupResX) ||
-      (mUsecolors && !(mRed && mGreen && mBlue))) {
+      (mColor && !(mRed && mGreen && mBlue))) {
     mMessage << "Not enough memory for given output dimension.";
     return false;
   }
   memset(mYadds, 0, mHeight * sizeof(int));
   memset(mPixel, 0, mWidth * mHeight * sizeof(float));
   memset(mLookupResX, 0, (1 + mWidth) * sizeof(int));
-  if (mUsecolors) {
+  if (mColor) {
     memset(mRed, 0, mWidth * mHeight * sizeof(float));
     memset(mGreen, 0, mWidth * mHeight * sizeof(float));
     memset(mBlue, 0, mWidth * mHeight * sizeof(float));
@@ -162,7 +162,7 @@ void Image::scanline(const JSAMPLE *sampleline) {
   pixel = &mPixel[lasty * mWidth];
   red = green = blue = nullptr;
 
-  if (mUsecolors) {
+  if (mColor) {
     int offset = lasty * mWidth;
     red = &mRed[offset];
     green = &mGreen[offset];
@@ -171,7 +171,7 @@ void Image::scanline(const JSAMPLE *sampleline) {
 
   while (lasty <= y) {
     const int components = mJPG.out_color_components;
-    const int readcolors = mUsecolors;
+    const int readcolors = mColor;
     for (int x = 0; x < mWidth; ++x) {
       const JSAMPLE *src = &sampleline[mLookupResX[x]];
       const JSAMPLE *src_end = &sampleline[mLookupResX[x + 1]];
@@ -262,7 +262,7 @@ void Image::normalize() {
     if (mYadds[y] > 1) {
       for (int x = 0; x < mWidth; ++x) {
         pixel[x] /= mYadds[y];
-        if (mUsecolors) {
+        if (mColor) {
           red[x] /= mYadds[y];
           green[x] /= mYadds[y];
           blue[x] /= mYadds[y];
@@ -270,7 +270,7 @@ void Image::normalize() {
       }
     }
     pixel += mWidth;
-    if (mUsecolors) {
+    if (mColor) {
       red += mWidth;
       green += mWidth;
       blue += mWidth;
@@ -279,25 +279,84 @@ void Image::normalize() {
 }
 
 Image &Image::operator>>(std::ostream &os) {
-#ifdef WIN32
-  char *line = (char *)malloc(mWidth + 1);
-#else
-  char line[mWidth + 1];
-#endif
-  int chars = (int)strlen(ascii_palette) - 1;
-  line[mWidth] = 0;
-  for (int y = 0; y < mHeight; ++y) {
-    for (int x = 0; x < mWidth; ++x) {
-      const float lum = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
-      const int pos = ROUND((float)chars * lum);
-      line[mFlipX ? mWidth - x - 1 : x] =
-          ascii_palette[mInvert ? pos : chars - pos];
+  if (mColor) {
+    for (int y = 0; y < mHeight; ++y) {
+      int xstart = 0;
+      int xend = mWidth;
+      int xincr = 1;
+
+      if (mFlipX) {
+        xstart = mWidth - 1;
+        xend = -1;
+        xincr = -1;
+      }
+
+      for (int x = xstart; x != xend; x += xincr) {
+        float Y = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+        float R = mRed[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+        float G = mGreen[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+        float B = mBlue[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+
+        const int pos =
+            ROUND((float)(ascii_palette_length) * (!mInvert ? 1.0f - Y : Y));
+        char ch = ascii_palette[pos];
+        const float t = 0.1f; // threshold
+        const float i = 1.0f - t;
+
+        int colr = 0;
+        // const float min = 1.0f / 255.0f;
+        // int highl = 0;
+        // // ANSI highlite, only use in grayscale
+        // if (Y >= 0.95f && R < min && G < min && B < min)
+        //   highl = 1; // ANSI highlite
+
+        if (R - t > G && R - t > B)
+          colr = 31; // red
+        else if (G - t > R && G - t > B)
+          colr = 32; // green
+        else if (R - t > B && G - t > B && R + G > i)
+          colr = 33; // yellow
+        else if (B - t > R && B - t > G && Y < 0.95f)
+          colr = 34; // blue
+        else if (R - t > G && B - t > G && R + B > i)
+          colr = 35; // magenta
+        else if (G - t > R && B - t > R && B + G > i)
+          colr = 36; // cyan
+        else if (R + G + B >= 3.0f * Y)
+          colr = 37; // white
+
+        if (!colr) {
+          // if (!highl) {
+          os << ch;
+          // } else {
+          //   os << "[1m" << ch << "[0m";
+          // }
+        } else {
+          os << "[" << colr << 'm' << ch << "[0m";
+        }
+      }
+      os << '\n';
     }
-    os << line << "\n";
-  }
+  } else {
 #ifdef WIN32
-  free(line);
+    char *line = (char *)malloc(mWidth + 1);
+#else
+    char line[mWidth + 1];
 #endif
+    line[mWidth] = 0;
+    for (int y = 0; y < mHeight; ++y) {
+      for (int x = 0; x < mWidth; ++x) {
+        const float lum = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+        const int pos = ROUND((float)ascii_palette_length * lum);
+        line[mFlipX ? mWidth - x - 1 : x] =
+            ascii_palette[mInvert ? pos : ascii_palette_length - pos];
+      }
+      os << line << '\n';
+    }
+#ifdef WIN32
+    free(line);
+#endif
+  }
   return *this;
 }
 }

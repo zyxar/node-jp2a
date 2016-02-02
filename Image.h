@@ -26,11 +26,16 @@ public:
   inline void invert(bool b) { mInvert = b; }
   inline void flipx(bool b) { mFlipX = b; }
   inline void flipy(bool b) { mFlipY = b; }
+  inline void color(bool b) {
+    if (mNext == INIT || mNext == ALLOC)
+      mColor = b;
+  }
 
   bool init(FILE *);
   bool init(const char *);
   bool alloc();
   void process();
+  void print_image_colors(FILE *f);
 
 private:
   bool init();
@@ -58,7 +63,7 @@ private:
   float mRedWeight;
   float mGreenWeight;
   float mBlueWeight;
-  bool mUsecolors;
+  bool mColor;
   bool mInvert;
   bool mFlipX;
   bool mFlipY;

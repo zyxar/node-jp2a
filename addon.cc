@@ -52,6 +52,12 @@ void Jp2a(const FunctionCallbackInfo<Value> &arguments) {
         }
       }
       {
+        auto argv = args->Get(String::NewFromUtf8(isolate, "color"));
+        if (argv->IsBoolean()) {
+          image.color(argv->BooleanValue());
+        }
+      }
+      {
         auto argv = args->Get(String::NewFromUtf8(isolate, "invert"));
         if (argv->IsBoolean()) {
           image.invert(argv->BooleanValue());
@@ -149,6 +155,12 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
           auto argv = args->Get(String::NewFromUtf8(isolate, "height"));
           if (argv->IsNumber()) {
             image->height(argv->NumberValue());
+          }
+        }
+        {
+          auto argv = args->Get(String::NewFromUtf8(isolate, "color"));
+          if (argv->IsBoolean()) {
+            image->color(argv->BooleanValue());
           }
         }
       }
