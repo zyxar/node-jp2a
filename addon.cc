@@ -272,7 +272,7 @@ void Init(Handle<Object> exports, Handle<Object> module) {
   Local<String> jp2a = String::NewFromUtf8(isolate, "jp2a");
   fn->SetName(jp2a);
   fn->ForceSet(String::NewFromUtf8(isolate, "version"),
-               String::NewFromUtf8(isolate, "0.4.0"), v8::ReadOnly);
+               String::NewFromUtf8(isolate, "0.4.1"), v8::ReadOnly);
   ImageWrap::Init(fn);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
 }
