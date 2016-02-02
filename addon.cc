@@ -99,8 +99,8 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   auto global = isolate->GetCurrentContext()->Global();
   JP2A::Image *image = ObjectWrap::Unwrap<ImageWrap>(arguments.Holder())->i;
   if (!image) {
-    Local<Value> msg[] = {String::NewFromUtf8(isolate, "Image is closed")};
-    callback->Call(global, 1, msg);
+    Local<Value> argv[] = {String::NewFromUtf8(isolate, "Image is closed")};
+    callback->Call(global, 1, argv);
     return arguments.GetReturnValue().Set(arguments.This());
   }
 
@@ -114,9 +114,9 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
       image->height(arguments[1]->NumberValue());
     }
     if (!image->alloc()) {
-      Local<Value> msg[] = {
+      Local<Value> argv[] = {
           String::NewFromUtf8(isolate, image->errorMessage().c_str())};
-      callback->Call(global, 1, msg);
+      callback->Call(global, 1, argv);
       return arguments.GetReturnValue().Set(arguments.This());
     }
   case JP2A::Image::PROCESS:
@@ -124,9 +124,9 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   case JP2A::Image::DONE:
     std::stringstream ss;
     (*image) >> ss;
-    Local<Value> ret[] = {v8::Null(isolate),
-                          String::NewFromUtf8(isolate, ss.str().c_str())};
-    callback->Call(global, 2, ret);
+    Local<Value> argv[] = {v8::Null(isolate),
+                           String::NewFromUtf8(isolate, ss.str().c_str())};
+    callback->Call(global, 2, argv);
     break;
   }
   return arguments.GetReturnValue().Set(arguments.This());

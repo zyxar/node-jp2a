@@ -55,7 +55,6 @@ private:
   float mRedWeight;
   float mGreenWeight;
   float mBlueWeight;
-  int mUseBorder;
   bool mUsecolors;
   bool mInvert;
   bool mFlipX;

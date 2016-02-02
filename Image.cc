@@ -45,8 +45,8 @@ Image::Image()
     : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
       mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr},
       mYadds{nullptr}, mLookupResX{nullptr}, mMessage{}, mRedWeight{0.2989f},
-      mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mUseBorder{0},
-      mUsecolors{false}, mInvert{true}, mFlipX{false}, mFlipY{false} {
+      mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mUsecolors{false},
+      mInvert{true}, mFlipX{false}, mFlipY{false} {
   for (int n = 0; n < 256; ++n) {
     mRED[n] = ((float)n) * mRedWeight / 255.0f;
     mGREEN[n] = ((float)n) * mGreenWeight / 255.0f;
@@ -246,8 +246,8 @@ void Image::aspect_ratio() {
     }
   }
 
-  if ((mWidth + mUseBorder * 2) > tWidth) {
-    mWidth = tWidth - mUseBorder * 2;
+  if (mWidth > tWidth) {
+    mWidth = tWidth;
     mHeight = ROUND(0.5f * (float)mWidth * (float)mJPG.output_height /
                     (float)mJPG.output_width);
   }
