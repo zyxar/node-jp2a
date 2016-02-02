@@ -17,23 +17,6 @@ using v8::Persistent;
 using v8::String;
 using v8::Value;
 
-void processJPEG(Isolate *isolate, const char *filename,
-                 std::stringstream &ss) {
-  JP2A::Image image{};
-  if (!image.init(filename)) {
-    isolate->ThrowException(Exception::Error(
-        String::NewFromUtf8(isolate, image.errorMessage().c_str())));
-    return;
-  }
-  if (!image.alloc()) {
-    isolate->ThrowException(Exception::Error(
-        String::NewFromUtf8(isolate, image.errorMessage().c_str())));
-    return;
-  }
-  image.process();
-  image >> ss;
-}
-
 void Jp2a(const FunctionCallbackInfo<Value> &arguments) {
   Isolate *isolate = arguments.GetIsolate();
   if (arguments.IsConstructCall()) {
@@ -46,10 +29,56 @@ void Jp2a(const FunctionCallbackInfo<Value> &arguments) {
         Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments")));
     return;
   }
-  // TODO: handle options
   String::Utf8Value filename(arguments[0]->ToString());
+  JP2A::Image image{};
+  if (!image.init(*filename)) {
+    isolate->ThrowException(Exception::Error(
+        String::NewFromUtf8(isolate, image.errorMessage().c_str())));
+    return;
+  }
+  if (arguments.Length() > 1 && arguments[1]->IsObject()) {
+    Local<Object> args = arguments[1]->ToObject();
+    if (!args.IsEmpty()) {
+      {
+        auto argv = args->Get(String::NewFromUtf8(isolate, "width"));
+        if (argv->IsNumber()) {
+          image.width(argv->NumberValue());
+        }
+      }
+      {
+        auto argv = args->Get(String::NewFromUtf8(isolate, "height"));
+        if (argv->IsNumber()) {
+          image.height(argv->NumberValue());
+        }
+      }
+      {
+        auto argv = args->Get(String::NewFromUtf8(isolate, "invert"));
+        if (argv->IsBoolean()) {
+          image.invert(argv->BooleanValue());
+        }
+      }
+      {
+        auto argv = args->Get(String::NewFromUtf8(isolate, "flipx"));
+        if (argv->IsBoolean()) {
+          image.flipx(argv->BooleanValue());
+        }
+      }
+      {
+        auto argv = args->Get(String::NewFromUtf8(isolate, "flipy"));
+        if (argv->IsBoolean()) {
+          image.flipy(argv->BooleanValue());
+        }
+      }
+    }
+  }
+  if (!image.alloc()) {
+    isolate->ThrowException(Exception::Error(
+        String::NewFromUtf8(isolate, image.errorMessage().c_str())));
+    return;
+  }
+  image.process();
   std::stringstream ss;
-  processJPEG(isolate, *filename, ss);
+  image >> ss;
   arguments.GetReturnValue().Set(
       String::NewFromUtf8(isolate, ss.str().c_str()));
 }
@@ -107,11 +136,22 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   switch (image->next()) {
   case JP2A::Image::INIT:
   case JP2A::Image::ALLOC:
-    if (length > 1 && arguments[0]->IsNumber()) {
-      image->width(arguments[0]->NumberValue());
-    }
-    if (length > 2 && arguments[1]->IsNumber()) {
-      image->height(arguments[1]->NumberValue());
+    if (length > 1 && arguments[0]->IsObject()) {
+      Local<Object> args = arguments[0]->ToObject();
+      if (!args.IsEmpty()) {
+        {
+          auto argv = args->Get(String::NewFromUtf8(isolate, "width"));
+          if (argv->IsNumber()) {
+            image->width(argv->NumberValue());
+          }
+        }
+        {
+          auto argv = args->Get(String::NewFromUtf8(isolate, "height"));
+          if (argv->IsNumber()) {
+            image->height(argv->NumberValue());
+          }
+        }
+      }
     }
     if (!image->alloc()) {
       Local<Value> argv[] = {
@@ -122,6 +162,29 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
   case JP2A::Image::PROCESS:
     image->process();
   case JP2A::Image::DONE:
+    if (length > 1 && arguments[0]->IsObject()) {
+      Local<Object> args = arguments[0]->ToObject();
+      if (!args.IsEmpty()) {
+        {
+          auto argv = args->Get(String::NewFromUtf8(isolate, "invert"));
+          if (argv->IsBoolean()) {
+            image->invert(argv->BooleanValue());
+          }
+        }
+        {
+          auto argv = args->Get(String::NewFromUtf8(isolate, "flipx"));
+          if (argv->IsBoolean()) {
+            image->flipx(argv->BooleanValue());
+          }
+        }
+        {
+          auto argv = args->Get(String::NewFromUtf8(isolate, "flipy"));
+          if (argv->IsBoolean()) {
+            image->flipy(argv->BooleanValue());
+          }
+        }
+      }
+    }
     std::stringstream ss;
     (*image) >> ss;
     Local<Value> argv[] = {v8::Null(isolate),

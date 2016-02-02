@@ -1,4 +1,9 @@
 jp2a = require '.'
+console.log jp2a 'test/piccode_10221754_974.jpg', {
+  invert: false,
+  flipx: false,
+  flipy: false}
+
 image = new jp2a.Image 'test/piccode_10221754_974.jpg'
 image.decode null
 image.decode (e, s) ->
@@ -13,7 +18,12 @@ image.decode (e, s) ->
   else process.stdout.write s
 
 image = new jp2a.Image 'test/piccode_10221754_974.jpg'
-image.decode 100, 18, (e, s) ->
+image.decode {
+  width: 100,
+  height: 18,
+  invert: false,
+  flipx: false,
+  flipy: true}, (e, s) ->
   if e then process.stderr.write e+'\n'
   else process.stdout.write s
   image.close()

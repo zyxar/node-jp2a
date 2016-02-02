@@ -23,6 +23,9 @@ public:
       mHeight = h;
   }
   inline NEXT_STEP next() { return mNext; }
+  inline void invert(bool b) { mInvert = b; }
+  inline void flipx(bool b) { mFlipX = b; }
+  inline void flipy(bool b) { mFlipY = b; }
 
   bool init(FILE *);
   bool init(const char *);
