@@ -279,84 +279,59 @@ void Image::normalize() {
 }
 
 Image &Image::operator>>(std::ostream &os) {
-  if (mColor) {
-    for (int y = 0; y < mHeight; ++y) {
-      int xstart = 0;
-      int xend = mWidth;
-      int xincr = 1;
+  for (int y = 0; y < mHeight; ++y) {
+    int xstart = mFlipX ? mWidth - 1 : 0;
+    int xend = mFlipX ? -1 : mWidth;
+    int xincr = mFlipX ? -1 : 1;
 
-      if (mFlipX) {
-        xstart = mWidth - 1;
-        xend = -1;
-        xincr = -1;
+    for (int x = xstart; x != xend; x += xincr) {
+      float Y = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+      const int pos =
+          ROUND((float)(ascii_palette_length) * (!mInvert ? 1.0f - Y : Y));
+      char ch = ascii_palette[pos];
+      if (!mColor) {
+        os << ch;
+        continue;
       }
+      const float lowbnd = 0.1f; // threshold
+      const float highbnd = 1.0f - lowbnd;
+      float R = mRed[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+      float G = mGreen[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+      float B = mBlue[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
+      int colr = 0;
+      // const float min = 1.0f / 255.0f;
+      // int highl = 0;
+      // // ANSI highlite, only use in grayscale
+      // if (Y >= 0.95f && R < min && G < min && B < min)
+      //   highl = 1; // ANSI highlite
+      if (R - lowbnd > G && R - lowbnd > B)
+        colr = 31; // red
+      else if (G - lowbnd > R && G - lowbnd > B)
+        colr = 32; // green
+      else if (R - lowbnd > B && G - lowbnd > B && R + G > highbnd)
+        colr = 33; // yellow
+      else if (B - lowbnd > R && B - lowbnd > G && Y < 0.95f)
+        colr = 34; // blue
+      else if (R - lowbnd > G && B - lowbnd > G && R + B > highbnd)
+        colr = 35; // magenta
+      else if (G - lowbnd > R && B - lowbnd > R && B + G > highbnd)
+        colr = 36; // cyan
+      else if (R + G + B >= 3.0f * Y)
+        colr = 37; // white
 
-      for (int x = xstart; x != xend; x += xincr) {
-        float Y = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
-        float R = mRed[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
-        float G = mGreen[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
-        float B = mBlue[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
-
-        const int pos =
-            ROUND((float)(ascii_palette_length) * (!mInvert ? 1.0f - Y : Y));
-        char ch = ascii_palette[pos];
-        const float t = 0.1f; // threshold
-        const float i = 1.0f - t;
-
-        int colr = 0;
-        // const float min = 1.0f / 255.0f;
-        // int highl = 0;
-        // // ANSI highlite, only use in grayscale
-        // if (Y >= 0.95f && R < min && G < min && B < min)
-        //   highl = 1; // ANSI highlite
-
-        if (R - t > G && R - t > B)
-          colr = 31; // red
-        else if (G - t > R && G - t > B)
-          colr = 32; // green
-        else if (R - t > B && G - t > B && R + G > i)
-          colr = 33; // yellow
-        else if (B - t > R && B - t > G && Y < 0.95f)
-          colr = 34; // blue
-        else if (R - t > G && B - t > G && R + B > i)
-          colr = 35; // magenta
-        else if (G - t > R && B - t > R && B + G > i)
-          colr = 36; // cyan
-        else if (R + G + B >= 3.0f * Y)
-          colr = 37; // white
-
-        if (!colr) {
-          // if (!highl) {
-          os << ch;
-          // } else {
-          //   os << "[1m" << ch << "[0m";
-          // }
-        } else {
-          os << "[" << colr << 'm' << ch << "[0m";
-        }
+      if (!colr) {
+        // if (!highl) {
+        os << ch;
+        // } else {
+        //   os << "[1m" << ch << "[0m";
+        // }
+      } else {
+        os << "[" << colr << 'm' << ch << "[0m";
       }
-      os << '\n';
     }
-  } else {
-#ifdef WIN32
-    char *line = (char *)malloc(mWidth + 1);
-#else
-    char line[mWidth + 1];
-#endif
-    line[mWidth] = 0;
-    for (int y = 0; y < mHeight; ++y) {
-      for (int x = 0; x < mWidth; ++x) {
-        const float lum = mPixel[x + (mFlipY ? mHeight - y - 1 : y) * mWidth];
-        const int pos = ROUND((float)ascii_palette_length * lum);
-        line[mFlipX ? mWidth - x - 1 : x] =
-            ascii_palette[mInvert ? pos : ascii_palette_length - pos];
-      }
-      os << line << '\n';
-    }
-#ifdef WIN32
-    free(line);
-#endif
+    os << '\n';
   }
+
   return *this;
 }
 }

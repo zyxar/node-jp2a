@@ -1,7 +1,7 @@
 jp2a = require '.'
 console.log jp2a 'test/piccode_10221754_974.jpg', {
   invert: false,
-  flipx: false,
+  flipx: true,
   flipy: false}
 
 image = new jp2a.Image 'test/piccode_10221754_974.jpg'
