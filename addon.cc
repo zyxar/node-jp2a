@@ -39,42 +39,20 @@ void Jp2a(const FunctionCallbackInfo<Value> &arguments) {
   if (arguments.Length() > 1 && arguments[1]->IsObject()) {
     Local<Object> args = arguments[1]->ToObject();
     if (!args.IsEmpty()) {
-      {
-        auto argv = args->Get(String::NewFromUtf8(isolate, "width"));
-        if (argv->IsNumber()) {
-          image.width(argv->NumberValue());
-        }
-      }
-      {
-        auto argv = args->Get(String::NewFromUtf8(isolate, "height"));
-        if (argv->IsNumber()) {
-          image.height(argv->NumberValue());
-        }
-      }
-      {
-        auto argv = args->Get(String::NewFromUtf8(isolate, "color"));
-        if (argv->IsBoolean()) {
-          image.color(argv->BooleanValue());
-        }
-      }
-      {
-        auto argv = args->Get(String::NewFromUtf8(isolate, "invert"));
-        if (argv->IsBoolean()) {
-          image.invert(argv->BooleanValue());
-        }
-      }
-      {
-        auto argv = args->Get(String::NewFromUtf8(isolate, "flipx"));
-        if (argv->IsBoolean()) {
-          image.flipx(argv->BooleanValue());
-        }
-      }
-      {
-        auto argv = args->Get(String::NewFromUtf8(isolate, "flipy"));
-        if (argv->IsBoolean()) {
-          image.flipy(argv->BooleanValue());
-        }
-      }
+#define SET_OPTIONS_(Type, Arg)                                                \
+  {                                                                            \
+    auto argv = args->Get(String::NewFromUtf8(isolate, #Arg));                 \
+    if (argv->Is##Type()) {                                                    \
+      image.Arg(argv->Type##Value());                                          \
+    }                                                                          \
+  }
+      SET_OPTIONS_(Number, width)
+      SET_OPTIONS_(Number, height)
+      SET_OPTIONS_(Boolean, color)
+      SET_OPTIONS_(Boolean, invert)
+      SET_OPTIONS_(Boolean, flipx)
+      SET_OPTIONS_(Boolean, flipy)
+#undef SET_OPTIONS_
     }
   }
   if (!image.alloc()) {
@@ -145,24 +123,16 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
     if (length > 1 && arguments[0]->IsObject()) {
       Local<Object> args = arguments[0]->ToObject();
       if (!args.IsEmpty()) {
-        {
-          auto argv = args->Get(String::NewFromUtf8(isolate, "width"));
-          if (argv->IsNumber()) {
-            image->width(argv->NumberValue());
-          }
-        }
-        {
-          auto argv = args->Get(String::NewFromUtf8(isolate, "height"));
-          if (argv->IsNumber()) {
-            image->height(argv->NumberValue());
-          }
-        }
-        {
-          auto argv = args->Get(String::NewFromUtf8(isolate, "color"));
-          if (argv->IsBoolean()) {
-            image->color(argv->BooleanValue());
-          }
-        }
+#define SET_OPTIONS_(Type, Arg)                                                \
+  {                                                                            \
+    auto argv = args->Get(String::NewFromUtf8(isolate, #Arg));                 \
+    if (argv->Is##Type()) {                                                    \
+      image->Arg(argv->Type##Value());                                         \
+    }                                                                          \
+  }
+        SET_OPTIONS_(Number, width)
+        SET_OPTIONS_(Number, height)
+        SET_OPTIONS_(Boolean, color)
       }
     }
     if (!image->alloc()) {
@@ -177,24 +147,9 @@ void ImageWrap::Decode(const FunctionCallbackInfo<Value> &arguments) {
     if (length > 1 && arguments[0]->IsObject()) {
       Local<Object> args = arguments[0]->ToObject();
       if (!args.IsEmpty()) {
-        {
-          auto argv = args->Get(String::NewFromUtf8(isolate, "invert"));
-          if (argv->IsBoolean()) {
-            image->invert(argv->BooleanValue());
-          }
-        }
-        {
-          auto argv = args->Get(String::NewFromUtf8(isolate, "flipx"));
-          if (argv->IsBoolean()) {
-            image->flipx(argv->BooleanValue());
-          }
-        }
-        {
-          auto argv = args->Get(String::NewFromUtf8(isolate, "flipy"));
-          if (argv->IsBoolean()) {
-            image->flipy(argv->BooleanValue());
-          }
-        }
+        SET_OPTIONS_(Boolean, invert)
+        SET_OPTIONS_(Boolean, flipx)
+        SET_OPTIONS_(Boolean, flipy)
       }
     }
     std::stringstream ss;
@@ -272,7 +227,7 @@ void Init(Handle<Object> exports, Handle<Object> module) {
   Local<String> jp2a = String::NewFromUtf8(isolate, "jp2a");
   fn->SetName(jp2a);
   fn->ForceSet(String::NewFromUtf8(isolate, "version"),
-               String::NewFromUtf8(isolate, "0.4.1"), v8::ReadOnly);
+               String::NewFromUtf8(isolate, "0.4.2"), v8::ReadOnly);
   ImageWrap::Init(fn);
   module->Set(String::NewFromUtf8(isolate, "exports"), fn);
 }

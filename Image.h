@@ -1,3 +1,6 @@
+#ifndef Image_h
+#define Image_h
+
 #include <stdio.h>
 
 #include <jpeglib.h>
@@ -69,3 +72,5 @@ private:
   bool mFlipY;
 };
 } // namespace JP2A
+
+#endif
