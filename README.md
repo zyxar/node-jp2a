@@ -28,7 +28,7 @@ This Node.js module is derived from [jp2a](http://sourceforge.net/projects/jp2a/
 This module exports a `jp2a` function as a convienent function to convert a JPEG image to ascii text, which accpets a string (path of the image) and an optional JSON object as parameters. `jp2a` function throws exception on encountering errors.
 
 ```coffeescript
-jp2a = require '.'
+jp2a = require 'node-jp2a'
 console.log jp2a 'test/piccode_10221754_974.jpg', {
   width: 100,
   height: 18,
@@ -41,7 +41,7 @@ console.log jp2a 'test/piccode_10221754_974.jpg', {
 Besides, `jp2a.Image` is exported to wrap underlying image and works the async way:
 
 ```coffeescript
-jp2a = require '.'
+jp2a = require 'node-jp2a'
 image = new jp2a.Image 'test/piccode_10221754_974.jpg'
 image.decode {
   width: 100,
@@ -56,4 +56,4 @@ image.decode {
 ```
 
 ## License
-GPL-2.0
+[GPL-2.0](http://opensource.org/licenses/GPL-2.0)
