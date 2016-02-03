@@ -18,5 +18,8 @@
   "scripts": {
   },
   "main": "build/Release/jp2a.node",
+  "bin": {
+    "node-jp2a": "./bin/jp2a.js"
+  },
   "license": "GPL-2.0"
 }
