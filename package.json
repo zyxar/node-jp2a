@@ -1,6 +1,6 @@
 {
   "name": "node-jp2a",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "jp2a library for Node.js",
   "keywords": ["jp2a"],
   "repository": {
