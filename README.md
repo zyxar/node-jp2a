@@ -23,7 +23,7 @@ jp2a library for Node.js
 
 ## Brief introduction
 
-This Node.js module is derived from [jp2a](http://sourceforge.net/projects/jp2a/).
+This Node.js module is derived from [jp2a](https://github.com/cslarsen/jp2a).
 
 This module exports a `jp2a` function as a convienent function to convert a JPEG image to ascii text, which accpets a string (path of the image) and an optional JSON object as parameters. `jp2a` function throws exception on encountering errors.
 
