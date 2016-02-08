@@ -46,14 +46,7 @@ Image::Image()
       mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr},
       mYadds{nullptr}, mLookupResX{nullptr}, mMessage{}, mRedWeight{0.2989f},
       mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mColor{false}, mInvert{true},
-      mFlipX{false}, mFlipY{false} {
-  for (int n = 0; n < 256; ++n) {
-    mRED[n] = ((float)n) * mRedWeight / 255.0f;
-    mGREEN[n] = ((float)n) * mGreenWeight / 255.0f;
-    mBLUE[n] = ((float)n) * mBlueWeight / 255.0f;
-    mGRAY[n] = ((float)n) / 255.0f;
-  }
-}
+      mFlipX{false}, mFlipY{false} {}
 
 bool Image::init() {
   mJPG.err = jpeg_std_error(&mJerr);
@@ -125,9 +118,10 @@ void Image::process() {
   int row_stride = mJPG.output_width * mJPG.output_components;
   JSAMPARRAY jbuffer = (*mJPG.mem->alloc_sarray)(
       reinterpret_cast<j_common_ptr>(&mJPG), JPOOL_IMAGE, row_stride, 1);
+  int lasty = 0;
   while (mJPG.output_scanline < mJPG.output_height) {
     jpeg_read_scanlines(const_cast<j_decompress_ptr>(&mJPG), jbuffer, 1);
-    scanline(jbuffer[0]);
+    scanline(jbuffer[0], lasty);
   }
   normalize();
   mNext = DONE;
@@ -153,15 +147,12 @@ Image::~Image() {
   TRY_(free, mLookupResX);
 }
 
-void Image::scanline(const JSAMPLE *sampleline) {
-  static int lasty = 0;
+void Image::scanline(const JSAMPLE *sampleline, int &lasty) {
   const int y = ROUND(mResizeY * (float)(mJPG.output_scanline - 1));
-
   // include all scanlines since last call
   float *pixel, *red, *green, *blue;
   pixel = &mPixel[lasty * mWidth];
   red = green = blue = nullptr;
-
   if (mColor) {
     int offset = lasty * mWidth;
     red = &mRed[offset];
@@ -170,8 +161,6 @@ void Image::scanline(const JSAMPLE *sampleline) {
   }
 
   while (lasty <= y) {
-    const int components = mJPG.out_color_components;
-    const int readcolors = mColor;
     for (int x = 0; x < mWidth; ++x) {
       const JSAMPLE *src = &sampleline[mLookupResX[x]];
       const JSAMPLE *src_end = &sampleline[mLookupResX[x + 1]];
@@ -179,36 +168,36 @@ void Image::scanline(const JSAMPLE *sampleline) {
       float v, r, g, b;
       v = r = g = b = 0.0f;
       while (src <= src_end) {
-        if (components != 3)
-          v += mGRAY[src[0]];
+        if (mJPG.out_color_components != 3)
+          v += ((float)src[0] / 255.0f);
         else {
-          v += mRED[src[0]] + mGREEN[src[1]] + mBLUE[src[2]];
-          if (readcolors) {
+          v += ((float)src[0] * mRedWeight / 255.0f) +
+               ((float)src[1] * mGreenWeight / 255.0f) +
+               ((float)src[2] * mBlueWeight / 255.0f);
+          if (mColor) {
             r += (float)src[0] / 255.0f;
             g += (float)src[1] / 255.0f;
             b += (float)src[2] / 255.0f;
           }
         }
         ++adds;
-        src += components;
+        src += mJPG.out_color_components;
       }
       pixel[x] += adds > 1 ? v / (float)adds : v;
-      if (readcolors) {
+      if (mColor) {
         red[x] += adds > 1 ? r / (float)adds : r;
         green[x] += adds > 1 ? g / (float)adds : g;
         blue[x] += adds > 1 ? b / (float)adds : b;
       }
     }
-
     ++mYadds[lasty++];
     pixel += mWidth;
-    if (readcolors) {
+    if (mColor) {
       red += mWidth;
       green += mWidth;
       blue += mWidth;
     }
   }
-
   lasty = y;
 }
 

@@ -43,7 +43,7 @@ public:
 private:
   bool init();
   void normalize();
-  void scanline(const JSAMPLE *);
+  void scanline(const JSAMPLE *, int &);
   void aspect_ratio();
 
 private:
@@ -62,7 +62,6 @@ private:
   std::stringstream mMessage;
 
 private:
-  float mRED[256], mGREEN[256], mBLUE[256], mGRAY[256];
   float mRedWeight;
   float mGreenWeight;
   float mBlueWeight;
