@@ -16,7 +16,8 @@
               '-Wno-unused-private-field',
             ],
           },
-          'libraries': ['-ljpeg -lncurses'],
+          'libraries': ['-L/usr/local/lib -ljpeg -lncurses'],
+          'include_dirs': [ '/usr/local/include' ],
         }, { # OS!="mac"
           'cflags!':    ['-fno-exceptions'],
           'cflags':     ['-DHAVE_CONFIG_H', '-O3'],
