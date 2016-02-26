@@ -42,9 +42,9 @@ bool termsize(int *_width, int *_height) {
 }
 
 Image::Image()
-    : mJerr{}, mJPG{}, mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0},
-      mPixel{nullptr}, mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr},
-      mYadds{nullptr}, mLookupResX{nullptr}, mMessage{}, mRedWeight{0.2989f},
+    : mFp{nullptr}, mNext{INIT}, mWidth{0}, mHeight{0}, mPixel{nullptr},
+      mRed{nullptr}, mGreen{nullptr}, mBlue{nullptr}, mYadds{nullptr},
+      mLookupResX{nullptr}, mMessage{}, mRedWeight{0.2989f},
       mGreenWeight{0.5866f}, mBlueWeight{0.1145f}, mColor{false}, mInvert{true},
       mFlipX{false}, mFlipY{false} {}
 
